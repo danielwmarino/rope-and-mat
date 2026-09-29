@@ -181,6 +181,64 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .dock .ctl button.go{background:var(--ink);color:var(--paper);border-color:var(--ink);width:56px}
 .dock .ctl button:disabled{opacity:.35;cursor:default}
 
+/* ---- full-screen timer ---- */
+.dock .ctl button svg{width:18px;height:18px}
+html.locked,html.locked body{overflow:hidden}
+.focus{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
+  height:100vh;height:100dvh;color:#fff;background:#14161B;overflow:hidden;
+  padding:calc(18px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px))
+          calc(16px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px));
+  transition:background-color .35s ease}
+.focus[data-st="work"]{background:#1B7F4B}
+.focus[data-st="rest"]{background:#B4472A}
+.f-bar{position:absolute;left:0;right:0;top:0;height:6px;background:rgba(255,255,255,.2)}
+.f-bar i{display:block;height:100%;background:#fff;transform-origin:left center;
+         transform:scaleX(0);transition:transform .2s linear}
+.f-top{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.f-tag{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;min-width:0;
+       font-family:var(--d);font-weight:600;font-size:clamp(14px,1vw + 10px,20px)}
+.f-pill{font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.82em;
+        padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.2)}
+.f-tag #fmeta{opacity:.88}
+.f-tr{flex:none;display:flex;align-items:center;gap:12px}
+.f-rem{font-size:clamp(13px,.8vw + 10px,18px);opacity:.82;white-space:nowrap}
+.f-top button{font-family:var(--d);font-weight:700;font-size:13.4px;letter-spacing:.08em;
+              text-transform:uppercase;padding:9px 14px;border-radius:9px;color:#fff;
+              background:rgba(255,255,255,.16)}
+.f-main{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;text-align:center}
+.f-clock{font-family:var(--m);font-weight:600;font-size:min(36vw,38vh);line-height:.92;
+         letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.focus[data-paused="1"] .f-clock{opacity:.45}
+.f-do{font-family:var(--d);font-weight:800;font-size:min(12vw,8.5vh);line-height:1.04;
+      letter-spacing:-.02em;text-wrap:balance;max-width:16ch;margin-top:1.2vh}
+.f-cue{font-size:clamp(17px,1.3vw + 12px,30px);line-height:1.32;max-width:34ch;
+       margin-top:1.4vh;opacity:.92;text-wrap:balance}
+.f-next{flex:none;display:grid;gap:2px;width:100%;max-width:880px;margin:12px auto 0;
+        padding:14px 18px;border-radius:14px;background:rgba(0,0,0,.2)}
+.f-next .f-lab{font-family:var(--d);font-weight:700;font-size:12.3px;letter-spacing:.14em;
+               text-transform:uppercase;opacity:.78}
+.f-next b{font-family:var(--d);font-weight:800;font-size:clamp(22px,2.2vw + 12px,42px);line-height:1.12}
+.f-next #fnextsub{font-size:clamp(15px,.6vw + 12px,20px);opacity:.86}
+.f-ctl{flex:none;display:flex;justify-content:center;align-items:center;gap:20px;margin-top:14px}
+.f-ctl button{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+              color:#fff;background:rgba(255,255,255,.18);font-size:20px}
+.f-ctl button svg{width:26px;height:26px}
+.f-ctl button.go{width:88px;height:88px;background:#fff;color:#14161B}
+.f-ctl button.go svg{width:34px;height:34px}
+@media (max-height:540px){
+  .focus{padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .f-clock{font-size:min(30vw,40vh)}
+  .f-do{font-size:min(7vw,9vh);margin-top:0}
+  .f-cue,.f-next .f-lab,.f-next #fnextsub{display:none}
+  .f-next{margin-top:6px;padding:8px 14px;display:flex;gap:10px;align-items:baseline;justify-content:center}
+  .f-next::before{content:"Next";font-family:var(--d);font-weight:700;font-size:12.3px;
+                  letter-spacing:.14em;text-transform:uppercase;opacity:.78}
+  .f-next b{font-size:20px}
+  .f-ctl{margin-top:8px;gap:14px}
+  .f-ctl button{width:48px;height:48px} .f-ctl button.go{width:60px;height:60px}
+}
+
 /* ---- library ---- */
 .filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
 .filters button{font-family:var(--d);font-weight:600;font-size:14.6px;padding:5px 13px;
@@ -396,9 +454,34 @@ input.num{font-family:var(--m);font-size:14.6px;width:62px;padding:5px 7px;borde
       <button class="go" id="play" aria-label="Start or pause">&#9654;</button>
       <button id="skip" aria-label="Skip to next interval">&#9197;</button>
       <button id="stop" aria-label="Reset timer">&#9632;</button>
+      <button id="full" aria-label="Show full-screen timer" hidden></button>
     </div>
   </div>
 </div>
+
+<div class="focus" id="focus" data-st="ready" role="dialog" aria-modal="true" aria-label="Workout timer" hidden>
+  <div class="f-bar"><i id="fbar"></i></div>
+  <div class="f-top">
+    <div class="f-tag"><span class="f-pill" id="fstate">Get set</span><span id="fmeta"></span></div>
+    <div class="f-tr"><span class="f-rem mono" id="frem"></span><button id="fmin">Hide</button></div>
+  </div>
+  <div class="f-main">
+    <div class="f-clock" id="fclock">0:10</div>
+    <div class="f-do" id="fdo" aria-live="polite"></div>
+    <div class="f-cue" id="fcue"></div>
+  </div>
+  <div class="f-next" id="fnext">
+    <span class="f-lab">Up next</span>
+    <b id="fnextname"></b>
+    <span id="fnextsub"></span>
+  </div>
+  <div class="f-ctl">
+    <button id="fstop" aria-label="End timer"></button>
+    <button class="go" id="fplay" aria-label="Pause"></button>
+    <button id="fskip" aria-label="Skip to next interval"></button>
+  </div>
+</div>
+
 
 <script>
 const D = {"meta": {"title": "The 6-Day Rope & Mat Program", "subtitle": "12 weeks of strength and conditioning. Jump rope and a mat. Nothing else.", "built_for": "Dan", "date": "September 2026", "duration": "20–30 minutes per session · 6 days per week · 12 weeks"}, "how": [["The split", "Three strength days, two cardio days, one full-body conditioning day, one rest day. Push, legs and pull are separated so nothing gets trained hard two days running."], ["The clock, not the count", "Almost every set is timed — 40 seconds of work, 20 seconds of rest. You stop when the clock stops, not when you hit a number. Work plus rest always adds up to 60 seconds — 40/20, then 45/15, then 50/10 — so one movement is always one minute and you know the session length before you start."], ["Three blocks of four weeks", "Every four weeks the work interval gets longer, the rest gets shorter, and the movements get harder. Week 4 and week 8 are deload weeks — one round less, on purpose. Week 12 is a retest."], ["Progression without weight", "With no load to add, intensity comes from leverage and tempo: elevate your feet, slow the lowering phase to three seconds, move to one limb, add a jump. Each exercise in the library lists its easier and harder version."], ["The rope is the engine", "Rope work appears on all six days — as a warm-up, as a finisher, and as the main event twice a week. It is the cheapest conditioning tool that exists and it doubles as calf, ankle and shoulder work."]], "blocks": [{"name": "Block 1 · Foundation", "weeks": "Weeks 1–4", "rounds": "3 rounds", "interval": "40s work / 20s rest", "tempo": "2 seconds down, 1 second up", "focus": "Learn the movements and build the habit. Use the easier variation of anything you cannot do with clean form for the full 40 seconds. Rope intervals: 8 rounds of 30s on / 30s off.", "deload": "Week 4: drop to 2 rounds, add 5 minutes of mobility to each session."}, {"name": "Block 2 · Build", "weeks": "Weeks 5–8", "rounds": "4 rounds · 3 on six-move days", "interval": "45s work / 15s rest", "tempo": "3 seconds down, 1 second up", "focus": "Move to the standard variation of every movement. Add the fourth round on Push and the Saturday circuit; the six-movement days stay at three rounds so the session still fits inside 30 minutes. Rope intervals: 10 rounds of 30s on / 30s off, and steady rope builds to 3 × 5 minutes.", "deload": "Week 8: drop to 3 rounds, keep the 45/15 interval."}, {"name": "Block 3 · Peak", "weeks": "Weeks 9–12", "rounds": "4 rounds · 3 on six-move days", "interval": "50s work / 10s rest", "tempo": "3 seconds down, explosive up", "focus": "Harder variations — single-leg, feet-elevated, explosive. Rounds do not go up again; the interval and the variations carry the progression. Rope intervals: 12 rounds of 30s on / 30s off, and steady rope builds to 3 × 6 minutes.", "deload": "Week 12: retest week. Run the benchmark on Day 1, then train light and easy the rest of the week."}], "schedule": [["Monday", "Day 1", "Push — chest, shoulders, triceps", "Strength", "~25 min"], ["Tuesday", "Day 2", "Rope intervals + core", "Cardio", "~25 min"], ["Wednesday", "Day 3", "Legs — quads, glutes, hamstrings, calves", "Strength", "~25 min"], ["Thursday", "Day 4", "Steady rope + mobility", "Cardio / recovery", "~25 min"], ["Friday", "Day 5", "Pull — back, rear delts, biceps + core", "Strength", "~25 min"], ["Saturday", "Day 6", "Full-body conditioning circuit", "Mixed", "~30 min"], ["Sunday", "Rest", "Walk, stretch, or nothing at all", "Rest", "—"]], "days": [{"id": "day1", "label": "Day 1", "name": "Push", "day_of_week": "Monday", "focus": "Chest, shoulders, triceps", "duration": "~25 minutes", "summary": "The heaviest upper-body pressing day of the week. Everything here is a push-up variant or a close cousin. Keep the ribs down and the glutes tight on every single rep — a push-up is a moving plank.", "warmup": {"duration": "3 min", "items": [["Easy rope bounce", "60 seconds, relaxed, small hops"], ["Arm circles", "20 forward, 20 back"], ["Scapular push-up", "15 reps — arms locked, shoulder blades only"], ["World's greatest stretch", "3 per side"]]}, "main": {"format": "Circuit — run all five movements back to back, then rest 60 seconds and repeat. 3 rounds in Block 1, 4 rounds in Blocks 2 and 3.", "exercises": ["push-up", "pike-push-up", "chair-dip", "diamond-push-up", "plank-shoulder-tap"]}, "finisher": {"name": "Rope finisher", "detail": "3 × 45 seconds fast rope, 15 seconds rest. Any style you like — just keep the rope moving."}, "notes": "If you fail before the buzzer, drop to the easier variation mid-set and keep working. Never stop the clock early."}, {"id": "day2", "label": "Day 2", "name": "Rope Intervals + Core", "day_of_week": "Tuesday", "focus": "Conditioning and midline", "duration": "~25 minutes", "summary": "Hard rope intervals first, while you are fresh, then a core block on the mat. The interval work is where the conditioning adaptation happens — 30 seconds should be genuinely uncomfortable by the fifth round.", "warmup": {"duration": "3 min", "items": [["Easy rope bounce", "90 seconds, building pace"], ["Ankle rolls", "10 each direction, each foot"], ["Hip circles", "10 each direction"], ["Wrist circles", "15 each direction"]]}, "main": {"format": "Rope intervals — 30 seconds hard / 30 seconds rest. 8 rounds in Block 1, 10 in Block 2, 12 in Block 3. Rotate through the styles below, one per round.", "exercises": ["rope-basic-bounce", "rope-alternate-foot", "rope-high-knees", "rope-boxer-skip", "rope-side-to-side", "rope-double-under"]}, "finisher": {"name": "Core block", "detail": "3 rounds on the mat, 40 seconds each with 20 seconds rest: hollow hold → dead bug → side plank (left) → side plank (right) → reverse crunch.", "exercises": ["hollow-hold", "dead-bug", "side-plank", "reverse-crunch"]}, "notes": "Trip-ups cost you time, not reps. Pick a rope style you can actually sustain for the full 30 seconds rather than the flashiest one."}, {"id": "day3", "label": "Day 3", "name": "Legs", "day_of_week": "Wednesday", "focus": "Quads, glutes, hamstrings, calves", "duration": "~25 minutes", "summary": "The biggest-volume session of the week and the one that pays the most for body composition. Six movements, and the hamstring and glute work at the end matters as much as the squatting at the front.", "warmup": {"duration": "3 min", "items": [["Easy rope bounce", "60 seconds"], ["Bodyweight squat", "15 slow reps, full depth"], ["Glute bridge", "15 reps, 2-second squeeze at the top"], ["Leg swings", "10 front-to-back and 10 side-to-side per leg"]]}, "main": {"format": "Circuit — all six movements back to back, rest 60 seconds, repeat. 3 rounds in every block; six movements is already 18 minutes of work. Add a fourth round only if you have time to spare.", "exercises": ["squat", "reverse-lunge", "glute-bridge", "wall-sit", "single-leg-rdl", "calf-raise"]}, "finisher": {"name": "Rope finisher", "detail": "2 × 60 seconds easy rope. Legs will be heavy — that is the point. Keep the hops small."}, "notes": "Depth beats speed. If your heels lift or your knees cave in, slow the rep down and shorten the range until they do not. With six movements this is already 18 minutes of work before the warm-up, so it stays at three rounds all the way through."}, {"id": "day4", "label": "Day 4", "name": "Steady Rope + Mobility", "day_of_week": "Thursday", "focus": "Aerobic base and joint health", "duration": "~25 minutes", "summary": "The easy day, and the one most people skip. Steady rope at a conversational pace builds the aerobic base that makes every other session recover faster. The mobility flow afterwards is not optional filler — it is the reason your hips and ankles still work at week 12.", "warmup": {"duration": "2 min", "items": [["Easy rope bounce", "2 minutes, building slowly to working pace"]]}, "main": {"format": "Steady rope: 3 rounds with 60 seconds rest between. 3 × 4 minutes in Block 1, 3 × 5 minutes in Block 2, 3 × 6 minutes in Block 3. Pace it so you could hold a conversation — basic bounce or boxer skip only.", "exercises": ["rope-basic-bounce", "rope-boxer-skip"]}, "finisher": {"name": "Mobility flow", "detail": "8 minutes on the mat, 45–60 seconds per position: cat-cow → 90/90 hip switch → thoracic open book (each side) → couch stretch (each side) → pigeon (each side) → seated hamstring → downward dog to cobra.", "exercises": ["cat-cow", "hip-9090", "open-book", "couch-stretch", "pigeon", "down-dog-cobra"]}, "notes": "If your calves are wrecked from Day 3, swap the rope for a brisk 20-minute walk. The aerobic effect is what matters, not the tool."}, {"id": "day5", "label": "Day 5", "name": "Pull + Core", "day_of_week": "Friday", "focus": "Back, rear delts, biceps, midline", "duration": "~25 minutes", "summary": "The hardest day to program without equipment, and the most important one for posture. A sturdy table or a desk turns into a rowing bar; a towel turns into a resistance band. Do not skip this day — six days of pressing with no pulling is how shoulders get cranky.", "warmup": {"duration": "3 min", "items": [["Easy rope bounce", "60 seconds"], ["Band-free shoulder dislocates", "15 reps with a towel held wide overhead"], ["Cat-cow", "10 slow cycles"], ["Prone swimmer", "20 reps"]]}, "main": {"format": "Circuit — all six movements back to back, rest 60 seconds, repeat. 3 rounds in every block. The work interval and the harder variations carry the progression here, not extra rounds.", "exercises": ["table-row", "towel-row", "prone-ytw", "superman-hold", "reverse-snow-angel", "bird-dog"]}, "finisher": {"name": "Core + rope", "detail": "2 rounds: 45 seconds hollow rock → 45 seconds side plank reach-through (each side) → 45 seconds fast rope. 15 seconds rest between movements.", "exercises": ["hollow-rock", "side-plank", "rope-basic-bounce"]}, "notes": "On the towel and isometric rows, the tension you create is the load. Pull like you mean it — a lazy self-resisted row does nothing."}, {"id": "day6", "label": "Day 6", "name": "Full-Body Conditioning", "day_of_week": "Saturday", "focus": "Everything, at pace", "duration": "~30 minutes", "summary": "One circuit, hard, all the way through. This is the session that most directly drives fat loss and it should leave you genuinely out of breath. The format changes each block to keep it from going stale.", "warmup": {"duration": "3 min", "items": [["Easy rope bounce", "60 seconds"], ["Bodyweight squat", "15 reps"], ["Push-up", "10 reps, controlled"], ["Inchworm walkout", "8 reps"]]}, "main": {"format": "Block 1: 4 rounds of the circuit at 40s work / 20s rest, straight through with no rest between rounds. Block 2: 20-minute EMOM — one movement at the top of each minute, rest whatever is left of the minute. Block 3: 4 rounds at 50s work / 10s rest, going for max reps every round.", "exercises": ["burpee", "mountain-climber", "squat-to-lunge", "push-up-shoulder-tap", "rope-high-knees", "plank-jack"]}, "finisher": {"name": "Cool-down", "detail": "3 minutes: walk it off, then 60 seconds of child's pose and 60 seconds of seated hamstring stretch."}, "emom": {"intro": "Block 2 runs as a 20-minute EMOM: start one movement at the top of each minute and rest whatever is left of that minute. Six movements cycle three full times plus two extra minutes, so you finish on burpees and mountain climbers.", "rows": [["Minute 1", "Burpee", "8 reps"], ["Minute 2", "Mountain climber", "40 total (20 per side)"], ["Minute 3", "Squat to reverse lunge", "5 cycles (5 squats, 10 lunges)"], ["Minute 4", "Push-up to shoulder tap", "8 reps"], ["Minute 5", "High-knee rope", "40 turns"], ["Minute 6", "Plank jack", "30 reps"]], "rule": "Every set should take 35–45 seconds, leaving 15–25 seconds of rest before the next minute starts. Run minute one, see where you land, and move every number up or down from there. Past 50 seconds is your ceiling — drop the reps back.", "progress": "Hold the same numbers for weeks 5 and 6, then add 2 reps to every movement for weeks 7 and 8."}, "notes": "Pace the first round like you have four more to go — because you do. Most people blow up on round one and crawl through the rest."}, {"id": "day7", "label": "Rest", "name": "Recovery", "day_of_week": "Sunday", "focus": "Do less", "duration": "Optional", "summary": "A full rest day. If you want to move, take a 20–30 minute walk and run through the mobility flow from Day 4. Nothing that leaves you breathing hard.", "warmup": null, "main": null, "finisher": null, "notes": "At 51, recovery is the variable that limits progress — not effort. Sleep and this rest day are doing as much work as the six sessions."}], "ex": {"push-up": {"name": "Push-Up", "cat": "Push", "setup": "Hands under the shoulders or slightly wider, fingers spread. Legs straight, feet together or hip-width. Body in one line from heel to head.", "execute": "Lower your chest toward the floor until your upper arms are roughly parallel with the ground, elbows tracking back at about 45 degrees from your torso. Press back up until the elbows lock, pushing the floor away.", "cues": ["Squeeze the glutes and brace the abs — the hips should not sag or pike", "Elbows back at 45°, not flared out to the sides", "Screw your hands into the floor to create shoulder tension"], "mistake": "Hips sagging, head craning forward, and a half-depth rep. Depth first, reps second.", "easier": "Hands elevated on a counter, step or couch — the higher the surface, the easier it gets.", "harder": "Feet elevated on a chair, or slow the lowering phase to 4 seconds. Then archer push-ups, shifting your weight over one hand."}, "pike-push-up": {"name": "Pike Push-Up", "cat": "Push", "setup": "Start in a push-up position and walk your feet in until your hips are stacked high over your shoulders, body in an inverted V. Hands slightly wider than shoulders.", "execute": "Bend the elbows and lower the crown of your head toward the floor just in front of your hands. Press back up until the arms are straight.", "cues": ["Keep the hips high the whole set — do not let it drift into a push-up", "Head travels forward of the hands, not straight down between them", "Elbows at 45°, not flared"], "mistake": "Letting the hips drop, which turns it back into a regular push-up and takes the shoulders out of it.", "easier": "Reduce the pike — walk the feet further back so the torso is less vertical.", "harder": "Feet elevated on a chair or the couch, which makes the torso vertical and loads the shoulders like an overhead press."}, "chair-dip": {"name": "Chair Dip", "cat": "Push", "setup": "Sit on the edge of a sturdy chair, step or couch. Hands gripping the edge just outside your hips, fingers pointing forward. Slide your hips off the front, legs extended out with heels on the floor.", "execute": "Bend at the elbows and lower your hips straight down until the upper arms are parallel with the floor. Press through the heels of your hands to return to the top and lock out.", "cues": ["Hips stay close to the chair — they should brush it on the way down", "Elbows point straight back, not out", "Chest up, shoulders down away from the ears"], "mistake": "Drifting the hips forward away from the bench, which turns the elbows into a hinge and grinds the shoulder.", "easier": "Bend the knees and plant the feet flat and close in, which takes load off. Or do floor triceps extensions instead.", "harder": "Heels up on a second chair so the legs are fully suspended, or pause 2 seconds at the bottom of each rep."}, "diamond-push-up": {"name": "Diamond Push-Up", "cat": "Push", "setup": "Push-up position with the hands together under the chest, index fingers and thumbs touching to form a triangle.", "execute": "Lower until your chest touches your hands, keeping the elbows tucked close to the ribs. Press back up to the lock.", "cues": ["Elbows brush past the ribs — this is a triceps movement, not a chest movement", "Same rigid plank as a standard push-up", "Wrists uncomfortable? Widen the diamond into a narrow triangle"], "mistake": "Flaring the elbows, which defeats the purpose and stresses the shoulders.", "easier": "Hands elevated on a chair or the stairs, or use a narrow-grip push-up rather than a full diamond.", "harder": "Feet elevated, or a 3-second lowering phase."}, "plank-shoulder-tap": {"name": "Plank Shoulder Tap", "cat": "Push / Core", "setup": "High plank, hands under the shoulders, feet slightly wider than hip-width for stability.", "execute": "Lift one hand and tap the opposite shoulder, then replace it and repeat on the other side. Alternate for the full interval.", "cues": ["The hips should not rotate — imagine a glass of water on your lower back", "Widen the feet if the hips are swinging", "Move slowly; speed is not the goal here"], "mistake": "Rocking the hips side to side, which is the anti-rotation work leaking out of the exercise.", "easier": "Tap from your knees, or just hold a plank and lift one hand an inch off the floor.", "harder": "Bring the feet together, or add a push-up between each pair of taps."}, "squat": {"name": "Bodyweight Squat", "cat": "Legs", "setup": "Feet shoulder-width or slightly wider, toes turned out 10–30 degrees. Arms out in front for balance.", "execute": "Push the hips back and bend the knees together, descending until your hip crease drops below your knee or you reach your comfortable depth. Drive through the whole foot to stand, squeezing the glutes at the top.", "cues": ["Knees track over the middle toes — push them out, do not let them cave", "Weight spread across the whole foot, heels planted", "Chest proud, ribs down"], "mistake": "Rounding the lower back at the bottom. Stop the descent just above where that happens.", "easier": "Squat to a chair and stand back up, or shorten the range of motion.", "harder": "3-second lowering with a 2-second pause at the bottom, then jump squats, then working toward a pistol squat with one leg extended."}, "reverse-lunge": {"name": "Reverse Lunge", "cat": "Legs", "setup": "Stand tall, feet hip-width, hands on hips or out front.", "execute": "Step one foot straight back and lower until both knees are bent to about 90 degrees and the back knee lightly touches the mat. Drive through the front heel to return to standing. Alternate legs for the interval.", "cues": ["Front shin stays roughly vertical", "Torso upright — do not lean over the front leg", "Step back far enough that the front knee does not shoot past the toes"], "mistake": "Short steps, which turns it into a knee-dominant grind instead of a glute and quad movement.", "easier": "Hold a wall or chair back for balance, or shorten the depth.", "harder": "Rear foot elevated on a chair (Bulgarian split squat), or jumping lunges in Block 3."}, "glute-bridge": {"name": "Glute Bridge", "cat": "Legs", "setup": "Lie on the mat, knees bent, feet flat and hip-width, heels about a hand's length from your glutes. Arms at your sides.", "execute": "Drive through the heels and lift the hips until your body forms a straight line from knee to shoulder. Squeeze hard for a full second at the top, then lower under control.", "cues": ["Tuck the pelvis slightly before lifting — it keeps the work in the glutes, not the lower back", "Ribs down; do not arch to get higher", "Full squeeze at the top of every rep"], "mistake": "Hyperextending the lower back to fake more height. Height should come from hip extension only.", "easier": "Shorten the range and hold the top position for the full interval instead of doing reps.", "harder": "Single-leg bridge with the other leg extended, or feet elevated on a chair."}, "wall-sit": {"name": "Wall Sit", "cat": "Legs", "setup": "Back flat against a wall, walk the feet out and slide down until the thighs are parallel with the floor, knees at 90 degrees, feet under the knees.", "execute": "Hold for the full interval. Hands off the thighs — rest them on your hips or hold them out in front.", "cues": ["Whole back in contact with the wall", "Weight in the heels", "Breathe — people hold their breath here and burn out early"], "mistake": "Sitting too high, which makes it easy, or resting the hands on the thighs, which takes 20 percent of the load off.", "easier": "Sit higher, with knees at about 120 degrees, and build down over the weeks.", "harder": "Lift one foot off the floor for half the interval and switch, or add a slow calf raise pulse while holding."}, "single-leg-rdl": {"name": "Single-Leg Romanian Deadlift", "cat": "Legs", "setup": "Stand on one leg, a slight soft bend in the standing knee. Arms out to the sides for balance.", "execute": "Hinge at the hip, sending the free leg straight back behind you as your torso lowers toward parallel with the floor. Stop when you feel a strong stretch in the standing hamstring, then drive the hip forward to stand tall. Half the interval per leg.", "cues": ["Back leg and torso move as one rigid line, like a see-saw", "Hips stay square to the floor — the back hip wants to open up; do not let it", "Push the hips backward, do not just bend forward"], "mistake": "Rotating the hips open, which turns a hamstring exercise into a balance stunt.", "easier": "Touch the back toe down to the floor behind you for balance, or hold a wall with one hand.", "harder": "Slow the lowering to 4 seconds and pause 2 seconds at the bottom of each rep."}, "calf-raise": {"name": "Calf Raise", "cat": "Legs", "setup": "Stand with the balls of your feet on the edge of a step, heels hanging off. On flat ground works too, with less range.", "execute": "Drive up onto the toes as high as you can, pause a full second at the top, then lower slowly until you feel a stretch at the bottom.", "cues": ["Full range — all the way up, all the way down", "Pause at the top of every rep; calves respond to time under tension", "Do not bounce"], "mistake": "Fast, short, bouncy reps that use tendon rebound instead of muscle.", "easier": "Both feet on flat ground.", "harder": "One leg at a time off a step, with a 2-second pause at the top."}, "table-row": {"name": "Table Inverted Row", "cat": "Pull", "setup": "Lie on your back under a sturdy table or desk. Grab the edge with an overhand grip a bit wider than shoulder-width. Heels on the floor, body straight from heel to head. Check the table takes your weight before you commit.", "execute": "Pull your chest up toward the underside of the table, driving the elbows back and down. Touch the edge if you can, pause, then lower under control until the arms are straight.", "cues": ["Shoulder blades pull together and down before the arms bend", "Hips stay up — the body is a straight plank the whole time", "Pause for a beat at the top of every rep"], "mistake": "Yanking with the arms while the hips sag. Lead with the shoulder blades.", "easier": "Bend the knees and plant the feet flat, which takes most of your bodyweight out of the lift.", "harder": "Feet elevated on a chair so the body is horizontal or head-down, or a 3-second lowering phase."}, "towel-row": {"name": "Towel Door Row", "cat": "Pull", "setup": "Loop a towel around a solid, closed door handle (or a sturdy post or railing). Take one end in each hand, walk your feet in toward the door and lean back with straight arms, heels planted.", "execute": "Pull your chest toward your hands, squeezing the shoulder blades together, then lower back out until the arms are straight and you feel the stretch across the back.", "cues": ["The further out you walk your feet, the harder it gets — use that as your load dial", "Elbows drive back past the ribs", "Body stays rigid; no hinging at the hips"], "mistake": "Standing too upright, which makes the exercise nearly weightless.", "easier": "Stand more upright with the feet further back from the door.", "harder": "Walk the feet further forward so you are leaning back closer to 45 degrees, and pause 2 seconds at the top."}, "prone-ytw": {"name": "Prone Y-T-W Raise", "cat": "Pull", "setup": "Lie face down on the mat, forehead resting lightly down, legs straight.", "execute": "Raise the arms off the floor in a Y overhead for 5 reps, then out to the sides in a T for 5 reps, then bent at the elbows in a W for 5 reps. Repeat the cycle for the interval.", "cues": ["Thumbs pointing up throughout", "Lift from the shoulder blades, not the hands", "Neck stays long — do not crane the head up"], "mistake": "Rushing. This is a small, precise movement for the mid-back and rear delts; two inches of clean height beats six inches of shrugging.", "easier": "Do fewer reps of each letter and rest between letters.", "harder": "Add a 2-second hold at the top of every single rep."}, "superman-hold": {"name": "Superman Hold", "cat": "Pull", "setup": "Face down on the mat, arms extended overhead, legs straight.", "execute": "Lift the arms, chest and legs off the floor at the same time and hold. Only the hips and lower belly stay in contact with the mat.", "cues": ["Reach long through the fingers and toes rather than lifting high", "Squeeze the glutes — that is what protects the lower back", "Look at the floor, not forward"], "mistake": "Cranking the neck back to get height. Keep the gaze down.", "easier": "Lift the arms and chest only, keeping the legs down. Or alternate opposite arm and leg.", "harder": "Add small flutter or swim motions with the arms while holding."}, "reverse-snow-angel": {"name": "Reverse Snow Angel", "cat": "Pull", "setup": "Face down on the mat, arms at your sides, palms facing down, chest lightly lifted.", "execute": "Keeping the arms straight and just off the floor, sweep them overhead in a wide arc until the hands nearly touch, then sweep back down to the sides. Slow and continuous.", "cues": ["Arms hover — they never touch the floor for the whole interval", "Rotate the palms to face down as they travel overhead", "Slow; four seconds up, four seconds back"], "mistake": "Bending the elbows to make the arc easier.", "easier": "Rest the hands lightly on the floor as they travel.", "harder": "Lift the chest off the mat for the whole set, combining it with a superman hold."}, "bird-dog": {"name": "Bird Dog", "cat": "Pull / Core", "setup": "All fours on the mat, hands under shoulders, knees under hips, spine neutral.", "execute": "Extend the right arm forward and the left leg back at the same time until both are level with the torso. Hold two seconds, return, and switch sides. Alternate for the interval.", "cues": ["Hips and shoulders stay square — no tipping", "Reach long rather than lifting high", "Pause and squeeze the glute of the working leg at full extension"], "mistake": "Lifting the leg high enough to arch the lower back. Level with the torso is the ceiling.", "easier": "Extend the arm and leg separately instead of together.", "harder": "Add a 5-second hold at full extension, or draw the elbow to the knee under the body between reps."}, "hollow-hold": {"name": "Hollow Hold", "cat": "Core", "setup": "Lie on your back on the mat, arms overhead, legs straight.", "execute": "Press your lower back flat into the mat, then lift the shoulder blades and the legs off the floor and hold that dished shape for the interval.", "cues": ["Lower back stays glued to the mat — this is the whole exercise", "Lower the legs to make it harder, raise them to make it easier", "Breathe shallow and steady; do not hold your breath"], "mistake": "Letting the lower back arch off the floor as the legs drop. The moment it lifts, raise your legs.", "easier": "Bend the knees to 90 degrees and keep the arms at your sides (tuck hold).", "harder": "Lower the arms and legs closer to the floor, or switch to hollow rocks."}, "hollow-rock": {"name": "Hollow Rock", "cat": "Core", "setup": "Start in a hollow hold position.", "execute": "Keeping the dished shape completely rigid, rock the whole body back and forth like a banana on a rocker, driven from the upper back.", "cues": ["The shape never changes — only the position on the floor does", "Rock from the shoulders, not by kicking the legs", "Small range is fine"], "mistake": "Breaking the hollow position and flailing the legs to generate the rock.", "easier": "Go back to a static hollow hold.", "harder": "Extend arms fully overhead and lower the legs closer to the floor."}, "dead-bug": {"name": "Dead Bug", "cat": "Core", "setup": "On your back, arms straight up toward the ceiling, hips and knees bent to 90 degrees.", "execute": "Lower the right arm overhead and extend the left leg out straight, both stopping just above the floor. Return and switch sides. Alternate slowly for the interval.", "cues": ["Lower back pressed into the mat the entire time", "Exhale as the limbs extend", "Slow — three seconds out, three seconds back"], "mistake": "Going fast and letting the back arch, which removes all the anti-extension work.", "easier": "Move the arm and leg separately, or keep the extending leg bent.", "harder": "Pause 3 seconds with the limbs extended before returning."}, "side-plank": {"name": "Side Plank", "cat": "Core", "setup": "On your side, elbow under the shoulder, forearm flat, feet stacked or staggered.", "execute": "Lift the hips until the body is one straight line from ankle to head and hold. Half the interval per side.", "cues": ["Push the floor away with the bottom shoulder — do not sink into it", "Hips stacked; do not let the top hip roll forward or back", "Squeeze the glutes"], "mistake": "Hips drifting down as the set goes on. Reset rather than holding a collapsed position.", "easier": "Drop to the bottom knee, shins angled back behind you.", "harder": "Lift the top leg, or add a reach-through: thread the top arm under the torso and back out."}, "reverse-crunch": {"name": "Reverse Crunch", "cat": "Core", "setup": "On your back, hands flat by your hips or under your lower back, knees bent and drawn up over the hips.", "execute": "Curl the pelvis up off the mat, driving the knees toward your chest, then lower the hips back down slowly under control.", "cues": ["The movement is the pelvis curling, not the knees traveling", "Slow on the way down — that is where the work is", "Do not swing the legs for momentum"], "mistake": "Using leg swing instead of lifting the hips off the mat. If the hips do not leave the floor, it is not a rep.", "easier": "Reduce the range — just a small pelvic tilt, focused on control.", "harder": "Straighten the legs, or pause at the top of every rep."}, "burpee": {"name": "Burpee", "cat": "Conditioning", "setup": "Stand tall, feet hip-width.", "execute": "Squat down, plant the hands, jump the feet back to a plank, drop the chest to the floor, press back up, jump the feet back in under you, and jump up with the hands overhead. Repeat.", "cues": ["Find a rhythm and stick to it — steady beats bursts", "Keep the plank rigid on the chest-to-floor portion", "Land soft on the jump, knees tracking out"], "mistake": "Going out too fast in round one. Pick a pace you can hold for the last round.", "easier": "Step the feet back and in instead of jumping, and skip the push-up and the jump (a squat thrust).", "harder": "Add a tuck jump at the top, or a full push-up at the bottom of every rep."}, "mountain-climber": {"name": "Mountain Climber", "cat": "Conditioning", "setup": "High plank, hands under the shoulders, body in one line.", "execute": "Drive one knee toward your chest, then switch legs, running in place in the plank position for the interval.", "cues": ["Hips stay low and level — they should not bob up and down", "Shoulders stay stacked over the hands", "Quick feet, quiet feet"], "mistake": "Piking the hips up as fatigue sets in, which makes it a shoulder stretch instead of core work.", "easier": "Slow the tempo down and step rather than run, or elevate the hands on a chair.", "harder": "Cross-body climbers, driving the knee toward the opposite elbow."}, "squat-to-lunge": {"name": "Squat to Reverse Lunge", "cat": "Conditioning", "setup": "Stand tall, feet shoulder-width.", "execute": "Perform one bodyweight squat, stand, then step back into a reverse lunge on the right. Return, squat again, then lunge on the left. Continue alternating.", "cues": ["Full depth on the squat before the lunge", "Stay tall in the lunge", "No pause at the top — flow from one to the next"], "mistake": "Cutting the squat depth short to keep the pace up.", "easier": "Drop the lunge depth or hold a wall for balance.", "harder": "Jump between each transition, or add a jump squat instead of the regular squat."}, "push-up-shoulder-tap": {"name": "Push-Up to Shoulder Tap", "cat": "Conditioning", "setup": "High plank, feet slightly wide.", "execute": "Perform one push-up, then at the top tap the left shoulder with the right hand and the right shoulder with the left. That is one rep.", "cues": ["No hip rotation on the taps", "Full depth on the push-up", "Wider feet make the taps easier to control"], "mistake": "Rushing the taps and rocking the hips.", "easier": "Do the push-up from the knees, or the taps from the knees.", "harder": "Feet together, or add a second push-up between tap pairs."}, "plank-jack": {"name": "Plank Jack", "cat": "Conditioning", "setup": "High plank or forearm plank, feet together.", "execute": "Jump the feet wide apart, then jump them back together, keeping the upper body completely still. Continue for the interval.", "cues": ["The hips do not rise when the feet jump", "Soft landings — quiet feet", "Brace the abs hard the whole time"], "mistake": "Letting the hips pike up with each jump.", "easier": "Step the feet out and in one at a time.", "harder": "Move to a forearm plank, or add a push-up every fourth jack."}, "rope-basic-bounce": {"name": "Basic Bounce", "cat": "Rope", "setup": "Rope handles at hip height, elbows tucked close to the ribs, hands out to the sides at about 45 degrees. Rope length: standing on the middle, the handles should reach your armpits.", "execute": "Turn the rope with the wrists only and hop just high enough to clear it — an inch off the floor. Land on the balls of the feet, knees soft.", "cues": ["Wrists do the turning, not the arms or shoulders", "Stay tall; do not pike at the hips", "Small hops — height is wasted energy"], "mistake": "Big arm circles and big jumps. Both burn you out in 30 seconds.", "easier": "Practice the hop without the rope, then turn the rope with both handles in one hand alongside your body.", "harder": "Increase the turn rate rather than the jump height."}, "rope-alternate-foot": {"name": "Alternate-Foot Step", "cat": "Rope", "setup": "Same posture as the basic bounce.", "execute": "Jog in place under the rope, landing on one foot at a time — left, right, left, right — one turn of the rope per foot strike.", "cues": ["Low, quick feet", "Same wrist-driven turn", "Stay on the balls of the feet"], "mistake": "Lifting the knees high, which slows the cadence.", "easier": "Slow the cadence and keep the steps tiny.", "harder": "Speed up the cadence into a sprint step."}, "rope-high-knees": {"name": "High-Knee Rope", "cat": "Rope", "setup": "Same posture as the basic bounce.", "execute": "Alternate-foot step, but drive each knee up to hip height under the rope. Much harder on the lungs.", "cues": ["Knees to hip height, not waist height", "Stay tall — do not lean back", "Expect a slower rope cadence than the basic bounce"], "mistake": "Leaning back to get the knees up, which kills the rhythm.", "easier": "Alternate every other rep between high knees and normal steps.", "harder": "Hold the knee height and increase the cadence."}, "rope-boxer-skip": {"name": "Boxer Skip", "cat": "Rope", "setup": "Same posture as the basic bounce.", "execute": "Shift your weight from one foot to the other with a light rocking rhythm, one rope turn per shift. The most sustainable style for long rounds.", "cues": ["Relaxed and rhythmic — this is the recovery style", "Weight shifts side to side, feet barely leave the floor", "Breathe in rhythm with the rope"], "mistake": "Turning it into a bounce. Keep the weight shifting.", "easier": "Slow the tempo; this is already the easiest style to sustain.", "harder": "Use it as the base and add double-unders every tenth turn."}, "rope-side-to-side": {"name": "Side-to-Side Hop", "cat": "Rope", "setup": "Same posture as the basic bounce, feet together.", "execute": "Hop laterally a few inches left, then right, under each turn of the rope. Adds ankle and hip stability work.", "cues": ["Small lateral distance — four to six inches", "Land soft, absorb through the ankles", "Keep the rope cadence steady"], "mistake": "Hopping too far sideways, which throws off the rope timing.", "easier": "Reduce the lateral distance to almost nothing.", "harder": "Increase the distance, or alternate side-to-side with front-to-back hops."}, "rope-double-under": {"name": "Double-Under", "cat": "Rope", "setup": "Same posture, but with a slightly faster wrist snap.", "execute": "Jump a little higher than normal and pass the rope under your feet twice in a single jump.", "cues": ["Snap the wrists faster — do not jump higher to compensate", "Stay tall; do not tuck the knees", "Expect to trip. That is part of learning it"], "mistake": "Trying to muscle it with the arms. It is a wrist speed problem, not a jump height problem.", "easier": "Practice single-single-double patterns rather than continuous doubles.", "harder": "String together consecutive doubles for the full interval."}, "cat-cow": {"name": "Cat-Cow", "cat": "Mobility", "setup": "All fours on the mat, hands under shoulders, knees under hips.", "execute": "Exhale and round the spine toward the ceiling, tucking the chin and pelvis. Inhale and reverse it, dropping the belly and lifting the chest and tailbone. Move slowly and continuously.", "cues": ["Move one vertebra at a time", "Breath drives the movement", "Full range in both directions"], "mistake": "Rushing through it as a formality instead of actually moving the spine.", "easier": "Reduce the range of motion.", "harder": "Add small side-bends between cycles."}, "hip-9090": {"name": "90/90 Hip Switch", "cat": "Mobility", "setup": "Sit on the mat with one leg bent in front at 90 degrees and the other bent behind at 90 degrees, both knees on the floor.", "execute": "Keeping the chest tall, rotate both knees across to the other side and settle into the mirrored position. Alternate slowly.", "cues": ["Chest stays upright — do not collapse forward", "Move slowly and control the transition", "Sit on a folded towel if your back rounds"], "mistake": "Forcing the range. Go where the hip lets you today.", "easier": "Use your hands behind you for support and reduce the range.", "harder": "Lift the hands off the floor and lean forward over the front shin at the end of each switch."}, "open-book": {"name": "Thoracic Open Book", "cat": "Mobility", "setup": "Lie on your side, knees bent to 90 degrees and stacked, arms extended straight out in front at shoulder height, palms together.", "execute": "Keeping the knees pinned together on the floor, sweep the top arm in a wide arc across your body and open the chest toward the ceiling. Follow the hand with your eyes. Hold, then sweep back.", "cues": ["Knees stay stacked and down — the rotation comes from the upper back", "Exhale as you open", "Follow the hand with your gaze"], "mistake": "Letting the knees peel apart, which turns it into a lower-back twist.", "easier": "Reduce the arc; stop where the knees start to lift.", "harder": "Hold the open position for a full 5 breaths each rep."}, "couch-stretch": {"name": "Couch Stretch", "cat": "Mobility", "setup": "Kneel on the mat facing away from a wall or couch, and place the top of the rear foot up against it, shin vertical. Front foot planted flat.", "execute": "Squeeze the rear glute, tuck the pelvis under, and bring the torso upright. Hold and breathe.", "cues": ["The glute squeeze and pelvic tuck are the whole stretch", "Do not let the lower back arch to get upright", "Back off if the knee complains"], "mistake": "Arching the lower back to look more upright, which fakes the range.", "easier": "Keep the rear foot on the floor instead of on the wall, in a half-kneeling lunge stretch.", "harder": "Walk the front foot further forward and bring the torso fully vertical."}, "pigeon": {"name": "Pigeon Stretch", "cat": "Mobility", "setup": "From all fours, bring one shin forward across your body and extend the other leg straight back behind you.", "execute": "Square the hips toward the floor and lower the torso over the front shin. Hold and breathe into the outer hip.", "cues": ["Hips square — do not let the weight dump to one side", "Support with a folded towel under the working hip if needed", "Breathe into the stretch rather than forcing it"], "mistake": "Letting the back leg turn out, which unloads the target hip.", "easier": "Figure-four stretch on your back instead — same target, much gentler.", "harder": "Bring the front shin closer to parallel with the front of the mat."}, "down-dog-cobra": {"name": "Down Dog to Cobra", "cat": "Mobility", "setup": "Start in a push-up position.", "execute": "Push the hips up and back into an inverted V, heels reaching for the floor. Hold a breath, then roll forward, lowering the hips and lifting the chest into a cobra. Flow back and forth.", "cues": ["Pedal the heels in down dog to work each calf", "Shoulders away from the ears in cobra", "One breath per position"], "mistake": "Rushing the flow. Two slow cycles beat ten fast ones.", "easier": "Bend the knees generously in down dog.", "harder": "Hold each position for 5 full breaths."}}, "benchmark": {"intro": "Run this on Day 1 of week 1, again at the end of week 6, and once more in week 12. Write the numbers down — it is the only objective evidence that any of this is working. Rest 2 minutes between tests.", "tests": [["Max push-ups", "2 minutes", "Standard form, chest to fist height. Rest in the plank or the down position, not on your knees."], ["Max bodyweight squats", "2 minutes", "Full depth every rep. Count only the reps that hit depth."], ["Plank hold", "To failure", "Forearm plank. Stop the clock the moment the hips drop."], ["Rope count", "3 minutes", "Basic bounce. Count total successful turns; trip-ups cost you the count, so pace it."], ["Max burpees", "1 minute", "Full burpee, chest to floor, jump at the top."]]}, "notes": [["Warm up, always", "Three minutes. It is not negotiable at 51 and it is the cheapest injury insurance there is. The rope doubles as the warm-up on almost every day."], ["Progress the variation, not the reps", "When you can hold clean form for the full interval on the standard version of a movement, move to the harder variation listed in the exercise library. That is how you keep making progress without any weight to add."], ["Soreness is not the scoreboard", "The first two weeks will be sore. After that, if you are still crippled the day after every session, you are going too hard for the recovery you are getting."], ["Training fasted", "If you train in a fasted window, the strength days are the ones to watch — output tends to drop in the last round. Moving the conditioning day to the fasted window and the strength days to a fed window usually works better."], ["Two rules for skipped days", "Never skip two in a row, and never skip Day 5. Missing a pull day in a program with this much pressing is what makes shoulders hurt by week 8."], ["The rope takes practice", "Expect to trip constantly for the first week or two. It is a skill, and it comes back faster than you would think. Turn the rope with the wrists, keep the hops an inch high, and the rest sorts itself out."]]};
@@ -564,16 +647,17 @@ function renderSession() {
 function timerPlan(dayIdx, week) {
   const d = D.days[dayIdx], p = params(week);
   if (!d.main) return null;
-  if (dayIdx === 1) return { kind: 'intervals', moves: d.main.exercises.map(k => D.ex[k].name),
+  const keys = d.main.exercises;
+  if (dayIdx === 1) return { kind: 'intervals', keys, moves: keys.map(k => D.ex[k].name),
     rounds: p.ropeRounds, work: 30, rest: 30, roundRest: 0 };
-  if (dayIdx === 3) return { kind: 'steady', moves: ['Steady rope'], rounds: 3,
+  if (dayIdx === 3) return { kind: 'steady', keys: [null], moves: ['Steady rope'], rounds: 3,
     work: p.steady, rest: 60, roundRest: 0 };
-  const mv = d.main.exercises.map(k => D.ex[k].name);
-  if (dayIdx === 5 && p.b === 1) return { kind: 'emom', moves: mv, rounds: 20,
+  const mv = keys.map(k => D.ex[k].name);
+  if (dayIdx === 5 && p.b === 1) return { kind: 'emom', keys, moves: mv, rounds: 20,
     work: 60, rest: 0, roundRest: 0 };
-  if (dayIdx === 5) return { kind: 'circuit', moves: mv,
+  if (dayIdx === 5) return { kind: 'circuit', keys, moves: mv,
     rounds: p.deload ? 3 : 4, work: p.work, rest: p.rest, roundRest: 0 };
-  return { kind: 'circuit', moves: mv,
+  return { kind: 'circuit', keys, moves: mv,
     rounds: mv.length >= 6 ? (p.deload ? 2 : 3) : p.rounds,
     work: p.work, rest: p.rest, roundRest: 60 };
 }
@@ -581,37 +665,63 @@ function buildQueue() {
   const t = timerPlan(state.day, state.week);
   if (!t) return [];
   const q = [{ kind: 'ready', secs: 10, move: 'Get set', meta: 'Session starts in' }];
+  // Zero-length segments are dropped so the clock never parks on a 0-second rest.
+  const add = s => { if (s.secs > 0) q.push(s); };
+  const n = t.keys.length;
   for (let r = 1; r <= t.rounds; r++) {
     if (t.kind === 'emom') {
-      q.push({ kind: 'work', secs: 60, move: t.moves[(r - 1) % t.moves.length],
-        meta: 'Minute ' + r + ' of ' + t.rounds + ' \u00b7 hit the reps, rest the remainder' });
+      const j = (r - 1) % n;
+      add({ kind: 'work', secs: 60, key: t.keys[j], move: t.moves[j],
+        meta: 'Minute ' + r + ' of ' + t.rounds + ' · hit the reps, rest the remainder' });
     } else if (t.kind === 'intervals') {
-      const m = t.moves[(r - 1) % t.moves.length];
-      q.push({ kind: 'work', secs: t.work, move: m, meta: 'Round ' + r + ' of ' + t.rounds });
-      if (r < t.rounds) q.push({ kind: 'rest', secs: t.rest, move: 'Easy',
-        meta: 'Next: ' + t.moves[r % t.moves.length] });
+      const j = (r - 1) % n;
+      add({ kind: 'work', secs: t.work, key: t.keys[j], move: t.moves[j],
+        meta: 'Round ' + r + ' of ' + t.rounds + ' · go hard' });
+      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Easy',
+        meta: 'Round ' + r + ' of ' + t.rounds + ' · easy bounce' });
     } else if (t.kind === 'steady') {
-      q.push({ kind: 'work', secs: t.work, move: 'Steady rope',
+      add({ kind: 'work', secs: t.work, key: null, move: 'Steady rope',
+        cue: 'Conversational pace. You should be able to talk in short sentences.',
         meta: 'Round ' + r + ' of ' + t.rounds + ' · conversational pace' });
-      if (r < t.rounds) q.push({ kind: 'rest', secs: t.rest, move: 'Walk it off',
-        meta: 'Round ' + (r + 1) + ' next' });
+      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Walk it off',
+        meta: 'Round ' + r + ' of ' + t.rounds });
     } else {
       t.moves.forEach((m, i) => {
-        const nxt = i < t.moves.length - 1 ? t.moves[i + 1] : (r < t.rounds ? t.moves[0] : 'Finisher');
-        q.push({ kind: 'work', secs: t.work, move: m,
-          meta: 'Round ' + r + ' of ' + t.rounds + ' · move ' + (i + 1) + ' of ' + t.moves.length });
-        q.push({ kind: 'rest', secs: (i === t.moves.length - 1 && r < t.rounds) ? t.roundRest : t.rest,
-          move: 'Rest', meta: 'Next: ' + nxt });
+        const lastMove = i === n - 1;
+        add({ kind: 'work', secs: t.work, key: t.keys[i], move: m,
+          meta: 'Round ' + r + ' of ' + t.rounds + ' · move ' + (i + 1) + ' of ' + n });
+        if (lastMove && r === t.rounds) return;       // no rest after the final set
+        add({ kind: 'rest', secs: lastMove ? t.roundRest : t.rest,
+          move: lastMove ? 'Round rest' : 'Rest', meta: 'Round ' + r + ' of ' + t.rounds });
       });
     }
   }
   q.push({ kind: 'done', secs: 0, move: 'Main block complete', meta: 'Finisher next' });
   return q;
 }
-let T = { q: [], i: 0, left: 0, running: false, id: null, ac: null };
+
+/* Deadline-based clock: each segment has an end time, so a frozen tab or a locked
+   screen catches up on return instead of resuming from where the interval stalled. */
+let T = { q: [], i: 0, endAt: 0, remMs: 0, running: false, id: null, ac: null,
+          lastSec: null, wake: null };
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1"/><rect x="14" y="4.5" width="4.5" height="15" rx="1"/></svg>',
+  skip: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5v14l10-7zM16 5h3v14h-3z"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>'
+};
+const now = () => Date.now();
+const mss = s => Math.floor(s / 60) + ':' + pad(s % 60);
+const firstSentence = s => (String(s).match(/^.*?[.!?](?=\s|$)/) || [s])[0];
+const setText = (s, v) => { const n = $(s); if (n.textContent !== v) n.textContent = v; };
+function segLeftMs() { return T.running ? T.endAt - now() : T.remMs; }
+function isDone() { const s = T.q[T.i]; return !!s && s.kind === 'done'; }
 function beep(freq, dur) {
   try {
     if (!T.ac) T.ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (T.ac.state === 'suspended') T.ac.resume();
     const o = T.ac.createOscillator(), g = T.ac.createGain();
     o.type = 'sine'; o.frequency.value = freq;
     g.gain.setValueAtTime(.001, T.ac.currentTime);
@@ -620,51 +730,188 @@ function beep(freq, dur) {
     o.connect(g); g.connect(T.ac.destination); o.start(); o.stop(T.ac.currentTime + dur + .02);
   } catch (e) {}
 }
-function paintTimer() {
-  const seg = T.q[T.i];
-  const dock = $('#dock');
-  if (!seg) { dock.dataset.st = 'idle'; $('#clock').textContent = '00:00';
-    $('#state').textContent = 'Ready'; $('#nowmove').textContent = 'Press play to start the session';
-    $('#nowmeta').textContent = D.days[state.day].main ? 'Timer loaded for ' + D.days[state.day].name
-      : 'No timed block today'; $('#barfill').style.width = '0'; return; }
-  dock.dataset.st = seg.kind === 'work' ? 'work' : seg.kind === 'rest' ? 'rest' : 'idle';
-  $('#clock').textContent = mmss(Math.max(0, T.left));
-  $('#state').textContent = { ready: 'Get set', work: 'Work', rest: 'Rest', done: 'Done' }[seg.kind];
-  $('#nowmove').textContent = seg.move;
-  $('#nowmeta').textContent = seg.meta;
-  $('#barfill').style.width = seg.secs ? (100 * (seg.secs - T.left) / seg.secs) + '%' : '100%';
+
+/* keep the screen on while the clock runs */
+async function wake() {
+  try { if ('wakeLock' in navigator && !T.wake) {
+    T.wake = await navigator.wakeLock.request('screen');
+    T.wake.addEventListener('release', () => { T.wake = null; });
+  } } catch (e) {}
 }
-function tick() {
-  T.left--;
-  if (T.left <= 3 && T.left > 0) beep(760, .07);
-  if (T.left <= 0) {
-    T.i++;
-    const seg = T.q[T.i];
-    if (!seg || seg.kind === 'done') { stopTimer(true); beep(420, .5); paintTimer(); return; }
-    T.left = seg.secs;
-    beep(seg.kind === 'work' ? 980 : 540, .22);
+function releaseWake() { try { if (T.wake) T.wake.release(); } catch (e) {} T.wake = null; }
+
+/* full-screen overlay */
+function openFocus() {
+  $('#focus').hidden = false;
+  document.documentElement.classList.add('locked');
+  try {
+    const r = document.documentElement;
+    if (!document.fullscreenElement && r.requestFullscreen)
+      r.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+  } catch (e) {}
+}
+function closeFocus() {
+  $('#focus').hidden = true;
+  document.documentElement.classList.remove('locked');
+  try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+  paintTimer();
+}
+
+function setPlayIcons() {
+  $('#play').innerHTML = T.running ? '&#10073;&#10073;' : '&#9654;';
+  $('#fplay').innerHTML = T.running ? ICON.pause : ICON.play;
+  $('#fplay').setAttribute('aria-label', T.running ? 'Pause' : isDone() ? 'Restart' : 'Resume');
+  $('#fstop').innerHTML = isDone() ? ICON.close : ICON.stop;
+  $('#fstop').setAttribute('aria-label', isDone() ? 'Close timer' : 'End timer');
+}
+function finish(sound) {
+  T.running = false; clearInterval(T.id);
+  T.i = T.q.length - 1; T.remMs = 0; T.lastSec = null;
+  releaseWake(); setPlayIcons();
+  if (sound) beep(420, .5);
+}
+// Move to the next segment, starting its clock at `from` (ms).
+function advance(from, sound) {
+  T.i++;
+  const seg = T.q[T.i];
+  if (!seg || seg.kind === 'done') { finish(sound); return false; }
+  T.endAt = from + seg.secs * 1000; T.remMs = seg.secs * 1000;
+  if (sound) beep(seg.kind === 'work' ? 980 : 540, .22);
+  return true;
+}
+function update() {
+  if (T.running) {
+    const t = now();
+    // Catch up through every segment that ended while the page was asleep;
+    // only beep for a transition that is happening right now.
+    while (T.running && t >= T.endAt) if (!advance(T.endAt, t - T.endAt < 1500)) break;
+    if (T.running) {
+      const s = Math.ceil((T.endAt - t) / 1000);
+      if (T.lastSec !== null && s === T.lastSec - 1 && s <= 3 && s > 0) beep(760, .07);
+      T.lastSec = s;
+    }
   }
   paintTimer();
 }
 function startTimer() {
   if (!D.days[state.day].main) return;
-  if (!T.q.length) { T.q = buildQueue(); T.i = 0; T.left = T.q[0].secs; }
-  T.running = true; $('#play').innerHTML = '&#10073;&#10073;';
+  if (isDone()) T.q = [];
+  if (!T.q.length) { T.q = buildQueue(); T.i = 0; T.remMs = T.q[0].secs * 1000; }
+  T.endAt = now() + T.remMs; T.running = true; T.lastSec = null;
   beep(660, .12);
-  clearInterval(T.id); T.id = setInterval(tick, 1000);
-  paintTimer();
+  clearInterval(T.id); T.id = setInterval(update, 200);
+  wake(); openFocus(); setPlayIcons(); update();
 }
-function pauseTimer() { T.running = false; clearInterval(T.id); $('#play').innerHTML = '&#9654;'; }
-function stopTimer(keep) { pauseTimer(); if (!keep) { T.q = []; T.i = 0; T.left = 0; } }
-function resetTimer() { stopTimer(false); paintTimer(); }
+function pauseTimer() {
+  if (T.running) T.remMs = Math.max(0, T.endAt - now());
+  T.running = false; clearInterval(T.id);
+  releaseWake(); setPlayIcons(); paintTimer();
+}
+function resetTimer() {
+  T.running = false; clearInterval(T.id); releaseWake();
+  T.q = []; T.i = 0; T.remMs = 0; T.lastSec = null;
+  setPlayIcons();
+  if (!$('#focus').hidden) closeFocus(); else paintTimer();
+}
+function skipSeg() {
+  if (!T.q.length || isDone()) return;
+  if (T.running) advance(now(), true);
+  else { T.i++; const seg = T.q[T.i];
+    if (!seg || seg.kind === 'done') finish(false); else T.remMs = seg.secs * 1000; }
+  T.lastSec = null; paintTimer();
+}
+function nextWork(i) {
+  for (let j = i + 1; j < T.q.length; j++) if (T.q[j].kind === 'work') return T.q[j];
+  return null;
+}
+function restLabel(r) {
+  return (r.secs >= 60 ? mss(r.secs) : r.secs + 's') + ' ' + r.move.toLowerCase();
+}
+
+function paintFocus(seg, secs, frac) {
+  const f = $('#focus');
+  if (f.hidden) return;
+  const d = D.days[state.day], done = seg.kind === 'done';
+  const paused = !T.running && !done;
+  f.dataset.st = seg.kind; f.dataset.paused = paused ? '1' : '0';
+  setText('#fstate', { ready: 'Get set', work: 'Work', rest: 'Rest', done: 'Done' }[seg.kind] +
+    (paused ? ' · Paused' : ''));
+  setText('#fmeta', done ? d.name : seg.meta);
+  let left = Math.max(0, segLeftMs());
+  for (let j = T.i + 1; j < T.q.length; j++) left += T.q[j].secs * 1000;
+  setText('#frem', done ? '' : mss(Math.ceil(left / 1000)) + ' left');
+  setText('#fclock', mss(secs));
+
+  const x = seg.key ? D.ex[seg.key] : null;
+  const nx = nextWork(T.i), nxi = nx && nx.key ? D.ex[nx.key] : null;
+  let big, cue;
+  if (done) { big = 'Main block complete';
+    cue = d.finisher ? 'Finisher next: ' + d.finisher.name + '.' : 'Nice work. Log the session when you are done.'; }
+  else if (seg.kind === 'work') { big = seg.move; cue = x ? x.cues[0] : (seg.cue || ''); }
+  else { big = seg.move; cue = nxi ? 'Set up: ' + firstSentence(nxi.setup) : ''; }
+  setText('#fdo', big); setText('#fcue', cue);
+
+  $('#fnext').hidden = done;
+  if (!done) {
+    if (nx) {
+      setText('#fnextname', nx.move);
+      const after = T.q[T.i + 1];
+      setText('#fnextsub', seg.kind === 'work'
+        ? (after && after.kind === 'rest' ? 'after ' + restLabel(after) : 'straight after this')
+        : nx.meta);
+    } else {
+      setText('#fnextname', d.finisher ? d.finisher.name : 'Done');
+      setText('#fnextsub', 'the main block ends after this set');
+    }
+  }
+  $('#fbar').style.transform = 'scaleX(' + frac.toFixed(4) + ')';
+}
+function paintTimer() {
+  const dock = $('#dock');
+  $('#full').hidden = !T.q.length || !$('#focus').hidden;
+  const seg = T.q.length ? T.q[T.i] : null;
+  if (!seg) { dock.dataset.st = 'idle'; $('#clock').textContent = '00:00';
+    $('#state').textContent = 'Ready'; $('#nowmove').textContent = 'Press play to start the session';
+    $('#nowmeta').textContent = D.days[state.day].main ? 'Timer loaded for ' + D.days[state.day].name
+      : 'No timed block today'; $('#barfill').style.width = '0'; return; }
+  const done = seg.kind === 'done';
+  const leftMs = done ? 0 : Math.max(0, segLeftMs());
+  const secs = Math.ceil(leftMs / 1000);
+  const frac = done || !seg.secs ? 1 : Math.min(1, Math.max(0, 1 - leftMs / (seg.secs * 1000)));
+  dock.dataset.st = seg.kind === 'work' ? 'work' : seg.kind === 'rest' ? 'rest' : 'idle';
+  $('#clock').textContent = mmss(secs);
+  $('#state').textContent = { ready: 'Get set', work: 'Work', rest: 'Rest', done: 'Done' }[seg.kind];
+  $('#nowmove').textContent = seg.move;
+  $('#nowmeta').textContent = seg.meta;
+  $('#barfill').style.width = (100 * frac) + '%';
+  paintFocus(seg, secs, frac);
+}
+
 $('#play').onclick = () => T.running ? pauseTimer() : startTimer();
 $('#stop').onclick = () => resetTimer();
-$('#skip').onclick = () => {
-  if (!T.q.length) return;
-  T.i++; const seg = T.q[T.i];
-  if (!seg || seg.kind === 'done') { stopTimer(true); paintTimer(); return; }
-  T.left = seg.secs; paintTimer();
+$('#skip').onclick = () => skipSeg();
+$('#full').innerHTML = ICON.full;
+$('#full').onclick = () => { openFocus(); paintTimer(); };
+$('#fplay').onclick = () => T.running ? pauseTimer() : startTimer();
+$('#fskip').innerHTML = ICON.skip;
+$('#fskip').onclick = () => skipSeg();
+$('#fstop').onclick = () => {
+  if (!isDone() && T.i > 0 && !confirm('End the timer for this session?')) return;
+  resetTimer();
 };
+$('#fmin').onclick = () => closeFocus();
+document.addEventListener('keydown', e => {
+  if ($('#focus').hidden) return;
+  if (e.key === ' ') { e.preventDefault(); T.running ? pauseTimer() : startTimer(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); skipSeg(); }
+  else if (e.key === 'Escape') closeFocus();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (T.running) wake();
+  update();
+});
+setPlayIcons();
 
 /* ---------- library ---------- */
 function renderLib() {
