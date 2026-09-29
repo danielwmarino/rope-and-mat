@@ -594,7 +594,7 @@ function renderSession() {
         ? t.rounds + ' rounds &middot; ' + t.work + 's work / ' + t.rest + 's rest &middot; ' +
           (t.roundRest ? t.roundRest + 's between rounds' : 'straight through, no round rest')
         : t.kind === 'intervals'
-          ? t.rounds + ' rounds &middot; 30s hard / 30s easy'
+          ? t.rounds + ' rounds &middot; 30s hard / 30s rest'
           : '3 rounds &middot; ' + (t.work / 60) + ' min steady / 60s rest')
       : '';
     g.appendChild(el('div', 'fmt', '<b>Week ' + state.week + ':</b> ' + line +
@@ -638,7 +638,8 @@ function renderSession() {
   mark.onclick = () => { state.log[key] = !state.log[key]; save(); renderRail(); renderSession();
     if (state.view === 'plan') renderGrid(); };
   row.append(mark, el('span', 'hint',
-    'Week ' + state.week + ' of 12 &middot; Block ' + (params(state.week).b + 1) + ' intervals are loaded into the timer below.'));
+    'Week ' + state.week + ' of 12 &middot; Block ' + (params(state.week).b + 1) + ' intervals' +
+    (d.finisher && FIN[state.day] ? ' and the ' + esc(d.finisher.name.toLowerCase()) : '') + ' are loaded into the timer below.'));
   s.appendChild(row);
   host.appendChild(s);
 }
@@ -661,6 +662,47 @@ function timerPlan(dayIdx, week) {
     rounds: mv.length >= 6 ? (p.deload ? 2 : 3) : p.rounds,
     work: p.work, rest: p.rest, roundRest: 60 };
 }
+/* Timed versions of each day's finisher, matching the finisher text in the program. */
+const FIN = {
+  0: { rounds: 3, work: 45, rest: 15, moves: [
+    { key: 'rope-basic-bounce', name: 'Fast rope', cue: 'Any style you like. Just keep the rope moving.' }] },
+  1: { rounds: 3, work: 40, rest: 20, moves: [
+    { key: 'hollow-hold' }, { key: 'dead-bug' },
+    { key: 'side-plank', name: 'Side Plank (left)' }, { key: 'side-plank', name: 'Side Plank (right)' },
+    { key: 'reverse-crunch' }] },
+  2: { rounds: 2, work: 60, rest: 20, moves: [
+    { key: 'rope-basic-bounce', name: 'Easy rope', cue: 'Legs will be heavy. That is the point. Keep the hops small.' }] },
+  3: { rounds: 1, work: 48, rest: 0, moves: [
+    { key: 'cat-cow' }, { key: 'hip-9090' },
+    { key: 'open-book', name: 'Open Book (left)' }, { key: 'open-book', name: 'Open Book (right)' },
+    { key: 'couch-stretch', name: 'Couch Stretch (left)' }, { key: 'couch-stretch', name: 'Couch Stretch (right)' },
+    { key: 'pigeon', name: 'Pigeon (left)' }, { key: 'pigeon', name: 'Pigeon (right)' },
+    { name: 'Seated hamstring', cue: 'Sit tall and hinge from the hips toward your toes. Do not round hard through the back.' },
+    { key: 'down-dog-cobra' }] },
+  4: { rounds: 2, work: 45, rest: 15, moves: [
+    { key: 'hollow-rock' },
+    { key: 'side-plank', name: 'Side Plank Reach-Through (left)', cue: 'Thread the top arm under your torso and back out. Hips stay high.' },
+    { key: 'side-plank', name: 'Side Plank Reach-Through (right)', cue: 'Thread the top arm under your torso and back out. Hips stay high.' },
+    { key: 'rope-basic-bounce', name: 'Fast rope', cue: 'Fast turns, small hops.' }] },
+  5: { rounds: 1, work: 60, rest: 0, moves: [
+    { name: 'Walk it off', cue: 'Easy walk. Let your breathing settle.' },
+    { name: "Child's pose", cue: 'Knees wide, hips back to heels, arms long. Breathe into your back.' },
+    { name: 'Seated hamstring', cue: 'Sit tall and hinge from the hips toward your toes. Do not round hard through the back.' }] }
+};
+function addFinisher(q, dayIdx) {
+  const d = D.days[dayIdx], f = FIN[dayIdx];
+  if (!f || !d.finisher) return;
+  const name = d.finisher.name, n = f.moves.length;
+  q.push({ kind: 'rest', secs: 30, move: 'Rest', meta: 'Main block done \u00b7 ' + name + ' next' });
+  for (let r = 1; r <= f.rounds; r++) f.moves.forEach((m, i) => {
+    q.push({ kind: 'work', secs: f.work, key: m.key || null, cue: m.cue,
+      move: m.name || D.ex[m.key].name,
+      meta: name + ' \u00b7 ' + (f.rounds > 1 ? 'round ' + r + ' of ' + f.rounds + ' \u00b7 ' : '') +
+        (n > 1 ? 'move ' + (i + 1) + ' of ' + n : 'set ' + r + ' of ' + f.rounds) });
+    const last = r === f.rounds && i === n - 1;
+    if (!last && f.rest > 0) q.push({ kind: 'rest', secs: f.rest, move: 'Rest', meta: name });
+  });
+}
 function buildQueue() {
   const t = timerPlan(state.day, state.week);
   if (!t) return [];
@@ -677,13 +719,13 @@ function buildQueue() {
       const j = (r - 1) % n;
       add({ kind: 'work', secs: t.work, key: t.keys[j], move: t.moves[j],
         meta: 'Round ' + r + ' of ' + t.rounds + ' · go hard' });
-      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Easy',
-        meta: 'Round ' + r + ' of ' + t.rounds + ' · easy bounce' });
+      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Rest',
+        meta: 'Round ' + r + ' of ' + t.rounds });
     } else if (t.kind === 'steady') {
       add({ kind: 'work', secs: t.work, key: null, move: 'Steady rope',
         cue: 'Conversational pace. You should be able to talk in short sentences.',
         meta: 'Round ' + r + ' of ' + t.rounds + ' · conversational pace' });
-      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Walk it off',
+      if (r < t.rounds) add({ kind: 'rest', secs: t.rest, move: 'Rest',
         meta: 'Round ' + r + ' of ' + t.rounds });
     } else {
       t.moves.forEach((m, i) => {
@@ -696,7 +738,8 @@ function buildQueue() {
       });
     }
   }
-  q.push({ kind: 'done', secs: 0, move: 'Main block complete', meta: 'Finisher next' });
+  addFinisher(q, state.day);
+  q.push({ kind: 'done', secs: 0, move: 'Session complete', meta: 'Log it on the page' });
   return q;
 }
 
@@ -845,9 +888,9 @@ function paintFocus(seg, secs, frac) {
   const x = seg.key ? D.ex[seg.key] : null;
   const nx = nextWork(T.i), nxi = nx && nx.key ? D.ex[nx.key] : null;
   let big, cue;
-  if (done) { big = 'Main block complete';
-    cue = d.finisher ? 'Finisher next: ' + d.finisher.name + '.' : 'Nice work. Log the session when you are done.'; }
-  else if (seg.kind === 'work') { big = seg.move; cue = x ? x.cues[0] : (seg.cue || ''); }
+  if (done) { big = 'Session complete';
+    cue = 'Nice work. Log the session when you are done.'; }
+  else if (seg.kind === 'work') { big = seg.move; cue = seg.cue || (x ? x.cues[0] : ''); }
   else { big = seg.move; cue = nxi ? 'Set up: ' + firstSentence(nxi.setup) : ''; }
   setText('#fdo', big); setText('#fcue', cue);
 
@@ -860,8 +903,8 @@ function paintFocus(seg, secs, frac) {
         ? (after && after.kind === 'rest' ? 'after ' + restLabel(after) : 'straight after this')
         : nx.meta);
     } else {
-      setText('#fnextname', d.finisher ? d.finisher.name : 'Done');
-      setText('#fnextsub', 'the main block ends after this set');
+      setText('#fnextname', 'Done');
+      setText('#fnextsub', 'the session ends after this set');
     }
   }
   $('#fbar').style.transform = 'scaleX(' + frac.toFixed(4) + ')';
